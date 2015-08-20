@@ -4,10 +4,11 @@ var fs = require('fs');
 var path = require('path');
 var child_process = require('child_process');
 
-var builder = require('xmlbuilder');
+var md5 = require("md5");
 var uuid = require('node-uuid');
 var readDir = require('readdir');
 var ShellJS = require("shelljs");
+var builder = require('xmlbuilder');
 
 function WixSDK(output) {
 
@@ -149,7 +150,9 @@ function(app_path, xwalk_path, meta_data, callback) {
 
     function MakeIdFromPath(path) {
         // Only ASCII, digits, '.', '_' are allowed.
-        return path.replace(new RegExp('[^A-Za-z0-9_.]', 'g'), '_');
+        // IDs must start with letter or "_", so we just prepend one
+        // to avoid a leading digit coming out of the md5.
+        return "_" + md5(path);
     }
     // To be used for cmd line arguments.
     function InQuotes(arg) {
