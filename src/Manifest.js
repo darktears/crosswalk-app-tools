@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE-APACHE-V2 file.
 
 var FS = require("fs");
+var Path = require("path");
 
 var FormatJson = require("format-json");
 var ShellJS = require("shelljs");
@@ -134,6 +135,22 @@ function Manifest(output, path) {
         }
     }
 
+    // Extensions
+    this._extensions = [];
+    if (json.xwalk_extensions) {
+        if (json.xwalk_extensions instanceof Array) {
+            json.xwalk_extensions.forEach(function (extension) {
+                if (ShellJS.test("-d", extension)) {
+                    this._extensions.push(Path.resolve(extension));
+                } else {
+                    output.error("Invalid extension path " + extension);
+                }
+            }.bind(this));
+        } else {
+            output.error("Invalid manifest field xwalk_extensions.");
+        }
+    }
+    
     // Package ID
     if (json.xwalk_package_id &&
         CommandParser.validatePackageId(json.xwalk_package_id, this._output)) {
@@ -283,6 +300,7 @@ function(packageId) {
         // Crosswalk fields
         "xwalk_app_version": "0.1",
         "xwalk_command_line": "",
+        "xwalk_extensions": [],
         "xwalk_package_id": packageId,
         "xwalk_target_platforms": platformInfo.platformId,
         // Android fields
@@ -502,6 +520,18 @@ Object.defineProperty(Manifest.prototype, "startUrl", {
 Object.defineProperty(Manifest.prototype, "commandLine", {
                       get: function() {
                                 return this._commandLine;
+                           }
+                      });
+
+/**
+ * Array of paths to directories containing extensions
+ * @member {String[]} extensions
+ * @instance
+ * @memberOf Manifest
+ */
+Object.defineProperty(Manifest.prototype, "extensions", {
+                      get: function() {
+                                return this._extensions;
                            }
                       });
 

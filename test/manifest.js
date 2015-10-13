@@ -245,6 +245,23 @@ exports.tests = {
         test.done();
     },
 
+    extensions: function(test) {
+
+        test.expect(2);
+
+        // default
+        var path = produceManifest();
+        var manifest = consumeManifest(path);
+        test.equal(manifest.extensions instanceof Array && manifest.extensions.length === 0, true);
+
+        // custom value
+        path = produceManifest({"xwalk_extensions": [ process.cwd() ]});
+        manifest = consumeManifest(path);
+        test.equal(manifest.extensions[0], process.cwd());
+
+        test.done();
+    },
+
     packageId: function(test) {
 
         test.expect(2);
