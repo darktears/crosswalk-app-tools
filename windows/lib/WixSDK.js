@@ -258,6 +258,8 @@ function(app_path, xwalk_path, meta_data, callback) {
 
     var program_menu_folder_ref = product.ele('DirectoryRef', { Id: 'ApplicationProgramsFolder' });
     var component = program_menu_folder_ref.ele('Component', { Id: 'ApplicationShortcut', Guid: uuid.v1() });
+    var registry_entries_ref = product.ele('DirectoryRef', { Id: 'TARGETDIR' });
+    var registry_entries_component = registry_entries_ref.ele('Component', { Id: 'RegistryEntries', Guid: uuid.v1() });
 
     var cmd_line_args = InQuotes(path.join(meta_data.app_name, 'manifest.json'));
     if (this._manifest.commandLine) {
@@ -301,9 +303,33 @@ function(app_path, xwalk_path, meta_data, callback) {
         KeyPath: 'yes'
     });
 
+    var registry_entries = registry_entries_component.ele('RegistryKey', {
+        Root: 'HKCU',
+        Key: 'Software\\' + meta_data.manufacturer + '\\' + meta_data.product
+    });
+    registry_entries.ele('RegistryValue', {
+        Type: 'integer',
+        Name: 'GOOGLE_API_KEY',
+        Value: '123456789',
+        KeyPath: 'yes'
+    });
+    registry_entries.ele('RegistryValue', {
+        Type: 'integer',
+        Name: 'GOOGLE_DEFAULT_CLIENT_ID',
+        Value: '123456789',
+        KeyPath: 'yes'
+    });
+    registry_entries.ele('RegistryValue', {
+        Type: 'integer',
+        Name: 'GOOGLE_DEFAULT_CLIENT_SECRET',
+        Value: '123456789',
+        KeyPath: 'yes'
+    });
+
     var feature = product.ele('Feature', { Id: 'MainApplication', Level: '1' });
     file_ids.forEach(function (file_id) { feature.ele('ComponentRef', { Id: file_id }); });
     feature.ele('ComponentRef', { Id: "ApplicationShortcut" });
+    feature.ele('ComponentRef', { Id: "RegistryEntries" });
 
     var xml_str = root.end({ pretty: true });
     var basename = meta_data.product + "-" + meta_data.version;
