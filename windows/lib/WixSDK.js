@@ -186,8 +186,20 @@ function(app_path, xwalk_path, meta_data, callback) {
 
         return file_id;
     }
+    
+    function CreateStartupFile(cmd_line_args) {
+        cmd_line_args = cmd_line_args.replace(/\"/g, "");
+        cmd_line_args = cmd_line_args.substring(cmd_line_args.indexOf(".json") + 6, cmd_line_args.length);
+        var outputJson = {};
+        var startupJson = {};
+        startupJson.manifest_path = meta_data.app_name + '/manifest.json';
+        startupJson.command_line = cmd_line_args;
+        outputJson.startup = startupJson;
+        fs.writeFile(xwalk_path + "/startup.json", JSON.stringify(outputJson));
+    }
 
     var xwalk_id = AddFileComponent(app_root_folder, xwalk_path, 'xwalk.exe');
+    AddFileComponent(app_root_folder, xwalk_path, 'startup.json');
     AddFileComponent(app_root_folder, xwalk_path, 'icudtl.dat');
     AddFileComponent(app_root_folder, xwalk_path, 'natives_blob.bin');
     AddFileComponent(app_root_folder, xwalk_path, 'snapshot_blob.bin');
@@ -307,6 +319,8 @@ function(app_path, xwalk_path, meta_data, callback) {
     if (meta_data.configId === "debug") {
         cmd_line_args += " --enable-inspector";
     }
+
+    CreateStartupFile(cmd_line_args);
 
     var shortcut = component.ele('Shortcut', {
         Id: 'ApplicationStartMenuShortcut',
