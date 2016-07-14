@@ -8,6 +8,8 @@ var ShellJS = require("shelljs");
 
 var WixSDK = require("./WixSDK");
 
+var Centennial = require("./WinCentennial");
+
 /**
  * Interface for project implementations.
  * @constructor
@@ -61,7 +63,8 @@ function(output, callback) {
     // Checking deps
     var deps = [
         "candle",
-        "light"
+        "light",
+        "DesktopAppConverter.cmd"
     ];
 
     var found = true;
@@ -240,6 +243,7 @@ function(configId, args, callback) {
     var versionPadding = new Array(4 - nComponents + 1).join(".0");
 
     var sdk = new WixSDK(this.application.rootPath, manifest, this.output);
+    var centennial = new Centennial(this.application.rootPath, manifest, this.output);
     var indicator = output.createInfiniteProgress("Building package");
     sdk.onData = function(data) {
         this.logOutput.write(data);
@@ -279,10 +283,21 @@ function(configId, args, callback) {
                     function (success) {
 
         if (success) {
-            indicator.done();
             this.exportPackage(metaData.msi);
             output.highlight("Package: " + Path.basename(metaData.msi));
-            callback(null);
+            centennial.generateAppX(this.appPath, this.platformPath, metaData,
+                    function (success) {
+                if (success) {
+                    indicator.done();
+                    this.exportPackage(metaData.appx);
+                    output.highlight("Package: " + Path.basename(metaData.appx));
+                    callback(null);
+                } else {
+                    indicator.update("error");
+                    callback("Building " + this.packageId + " failed");
+                }
+                return;
+            }.bind(this));
         } else {
             indicator.update("error");
             callback("Building " + this.packageId + " failed");
